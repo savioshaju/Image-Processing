@@ -1,0 +1,53 @@
+@"
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
+
+# Python build / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
+venv310/
+.env/
+.env.*
+
+# Flask / Django specific
+instance/
+*.sqlite3
+
+# Machine learning artifacts
+*.pth
+*.pt
+*.pb
+*.onnx
+*.h5
+*.ckpt
+*.weights
+*.npy
+*.npz
+
+# Training outputs / temp dirs
+runs/
+outputs/
+checkpoints/
+wandb/
+experiments/
+logs/
+
+# Project-specific
+uploads/
+project_structure.txt
+"@ | Out-File -Encoding utf8 .gitignore

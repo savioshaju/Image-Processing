@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Original Image</h4>
+                </div>
+                <div class="card-body">
+                    <img src="{{ record.original_url }}" class="img-fluid enlargeable" alt="Original image" data-url="{{ record.original_url }}">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Processed Image</h4>
+                </div>
+                <div class="card-body">
+                    <img src="{{ record.processed_url }}" class="img-fluid enlargeable" alt="Processed image" data-url="{{ record.processed_url }}">
+                    <div class="mt-3">
+                        <a href="{{ record.processed_url }}" download class="btn btn-primary">
+                            <i class="fas fa-download"></i> Download Processed Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cropped Objects Section -->
+    {% if record.cropped_objects_urls and record.cropped_objects_urls|length > 0 %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Cropped Objects ({{ record.cropped_objects_count }})</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for cropped_obj in record.cropped_objects_urls %}
+                        <div class="col-md-3 mb-3">
+                            <img src="{{ cropped_obj.url }}" class="img-thumbnail enlargeable" alt="Cropped object {{ loop.index }}" data-url="{{ cropped_obj.url }}">
+                            <div class="mt-2">
+                                <p class="mb-1"><strong>{{ cropped_obj.label }}</strong></p>
+                                <p class="mb-1">Confidence: {{ "%.2f"|format(cropped_obj.confidence * 100) }}%</p>
+                                <a href="{{ cropped_obj.url }}" download class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Extracted Text Section -->
+    {% if record.text_data and record.text_data|length > 0 %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Extracted Text ({{ record.text_elements_count }})</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Text</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for text_item in record.text_data %}
+                                <tr>
+                                    <td>{{ text_item.text }}</td>
+                                    <td>{{ "%.2f"|format(text_item.confidence * 100) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Image Statistics</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h5>{{ record.detections_count }}</h5>
+                            <p>Objects Detected</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5>{{ record.text_elements_count }}</h5>
+                            <p>Text Elements Found</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h5>{{ record.view_count }}</h5>
+                            <p>Views</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h5>{{ record.download_count }}</h5>
+                            <p>Downloads</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h5>{{ record.text_copy_count }}</h5>
+                            <p>Text Copies</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.gallery') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Gallery
+        </a>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Image Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Enlarged view">
+            </div>
+            <div class="modal-footer">
+                <a id="modalDownload" href="#" download class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.enlargeable {
+    cursor: zoom-in;
+    transition: transform 0.25s ease;
+}
+
+.enlargeable:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all enlargeable images
+    const images = document.querySelectorAll('.enlargeable');
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    const modalImage = document.getElementById('modalImage');
+    const modalDownload = document.getElementById('modalDownload');
+    
+    // Add click event to each image
+    images.forEach(image => {
+        image.addEventListener('click', function() {
+            const imageUrl = this.getAttribute('data-url') || this.src;
+            modalImage.src = imageUrl;
+            modalDownload.href = imageUrl;
+            modal.show();
+        });
+    });
+    
+    // Close modal when clicking on the modal background
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            modal.hide();
+        }
+    });
+    
+    // Add keyboard event to close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('imageModal').classList.contains('show')) {
+            modal.hide();
+        }
+    });
+});
+</script>
+{% endblock %}

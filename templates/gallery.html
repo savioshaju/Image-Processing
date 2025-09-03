@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Processed Images Gallery</h2>
+    
+    {% if records %}
+    <div class="row">
+        {% for record in records %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <img src="{{ record.processed_url }}" class="card-img-top" alt="Processed image" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">Image #{{ record.id }}</h5>
+                    <p class="card-text">
+                        <span class="badge bg-primary">{{ record.detections_count }} objects</span>
+                        <span class="badge bg-success">{{ record.text_elements_count }} text elements</span>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Views: {{ record.view_count }} | 
+                            Downloads: {{ record.download_count }} | 
+                            Text copies: {{ record.text_copy_count }}
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('main.view_record', record_id=record.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('gallery', page=current_page-1) }}">Previous</a>
+            </li>
+            
+            {% for page_num in range(1, total_pages+1) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.gallery', page=page_num) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('main.gallery', page=current_page+1) }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="alert alert-info">
+        No processed images found. <a href="{{ url_for('main.upload_file') }}">Process your first image</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

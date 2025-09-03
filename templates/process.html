@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Processor - Processing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border: none;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-completed {
+            border-left: 4px solid #198754 !important;
+        }
+        
+        .card-failed {
+            border-left: 4px solid #dc3545 !important;
+        }
+        
+        .skeleton-loader {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .skeleton-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        
+        .skeleton-text {
+            height: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .dot-animation::after {
+            content: '';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .grid-skeleton {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .grid-skeleton-item {
+            height: 100px;
+            border-radius: 8px;
+        }
+        
+        .cursor-zoom {
+            cursor: zoom-in;
+        }
+        
+        .comparison-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .comparison-item {
+            flex: 1 1 50%;
+            padding: 10px;
+        }
+        
+        .image-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .image-card-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .before-after-container {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+        }
+        
+        .before-after-container .before,
+        .before-after-container .after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .before-after-container .before img,
+        .before-after-container .after img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .before-after-container .after {
+            width: 50%;
+            border-right: 2px solid white;
+        }
+        
+        .before-after-container .label {
+            position: absolute;
+            bottom: 10px;
+            padding: 5px 10px;
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        .before-after-container .before .label {
+            left: 10px;
+        }
+        
+        .before-after-container .after .label {
+            right: 10px;
+        }
+        
+        .slider-comparison {
+            position: relative;
+        }
+        
+        #comparisonSlider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            opacity: 0;
+            cursor: col-resize;
+            z-index: 10;
+        }
+        
+        .slider-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border: 2px solid #0d6efd;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .slider-button::before,
+        .slider-button::after {
+            content: '';
+            position: absolute;
+            background-color: #0d6efd;
+        }
+        
+        .slider-button::before {
+            top: 50%;
+            left: 8px;
+            right: 8px;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        .slider-button::after {
+            left: 50%;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+        
+        .bg-light-blue {
+            background-color: #e9f7fe !important;
+        }
+        
+        .bg-light-green {
+            background-color: #e9f9f0 !important;
+        }
+        
+        .bg-light-orange {
+            background-color: #fff4e6 !important;
+        }
+        
+        .detection-color-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .text-snippet {
+            position: relative;
+        }
+        
+        .text-snippet::before,
+        .text-snippet::after {
+            content: '"';
+            font-size: 24px;
+            color: #6c757d;
+            position: absolute;
+        }
+        
+        .text-snippet::before {
+            top: 5px;
+            left: 5px;
+        }
+        
+        .text-snippet::after {
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        .cropped-object-card {
+            transition: transform 0.2s;
+        }
+        
+        .cropped-object-card:hover {
+            transform: scale(1.03);
+        }
+        
+        .object-fit-cover {
+            object-fit: cover;
+        }
+        
+        .processing-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .success-message {
+            color: #198754;
+            font-weight: 500;
+        }
+        
+        /* Remove view switch buttons */
+        .view-switch-buttons {
+            display: none;
+        }
+        
+        .progress-status {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Processing View -->
+    <div id="processingView">
+        <div class="container py-4">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h1 class="display-5 fw-bold text-primary">Processing Your Image</h1>
+                    <p class="lead">We're analyzing your image with our AI models. This may take several minutes.</p>
+                    <div class="progress mt-4" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="overallProgress"></div>
+                    </div>
+                    <small class="text-muted" id="progressText">Starting processing</small>
+                </div>
+            </div>
+
+            <!-- Results Grid -->
+            <div class="row g-4">
+                <!-- Original Image Card -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100 card-completed">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-image text-success me-2"></i>Original Image
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <img src="{{ original_image }}" alt="Original image" class="img-fluid rounded" id="originalImage">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Processed Image Card -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100" id="processedImageCard">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-magic me-2"></i>Enhanced Image
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div class="text-center py-4" id="srLoading">
+                                <div class="skeleton-circle skeleton-loader mb-3"></div>
+                                <p class="mb-0">Enhancing image quality<span class="dot-animation"></span></p>
+                            </div>
+                            <img src="" alt="Processed image" class="img-fluid rounded d-none" id="processedImage">
+                            <div id="srError" class="error-message d-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detections Card -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100" id="detectionsCard">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-search me-2"></i>Object Detection
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="detectionsLoading">
+                                <p>Detecting objects<span class="dot-animation"></span></p>
+                                <div class="skeleton-text skeleton-loader w-75"></div>
+                                <div class="skeleton-text skeleton-loader w-50"></div>
+                            </div>
+                            <div id="detectionsResults" class="d-none">
+                                <ul class="list-group list-group-flush" id="detectionsList"></ul>
+                            </div>
+                            <div id="detectionsError" class="error-message d-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extracted Text Card -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100" id="textCard">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-font me-2"></i>Text Extraction
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="textLoading">
+                                <p>Extracting text<span class="dot-animation"></span></p>
+                                <div class="skeleton-text skeleton-loader"></div>
+                                <div class="skeleton-text skeleton-loader"></div>
+                                <div class="skeleton-text skeleton-loader w-75"></div>
+                            </div>
+                            <div id="textResults" class="d-none">
+                                <div class="list-group list-group-flush" id="textList"></div>
+                            </div>
+                            <div id="textError" class="error-message d-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cropped Objects Card -->
+                <div class="col-12">
+                    <div class="card shadow-sm" id="croppedObjectsCard">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-crop me-2"></i>Extracted Objects
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="croppedLoading">
+                                <p>Extracting objects<span class="dot-animation"></span></p>
+                                <div class="grid-skeleton">
+                                    <div class="grid-skeleton-item skeleton-loader"></div>
+                                    <div class="grid-skeleton-item skeleton-loader"></div>
+                                    <div class="grid-skeleton-item skeleton-loader"></div>
+                                    <div class="grid-skeleton-item skeleton-loader"></div>
+                                </div>
+                            </div>
+                            <div id="croppedResults" class="d-none">
+                                <div class="row g-2" id="croppedGrid"></div>
+                            </div>
+                            <div id="croppedError" class="error-message d-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Footer -->
+                <div class="col-12 mt-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-3">
+                            <div id="dbSaving">
+                                <p class="mb-0">Saving record to database<span class="dot-animation"></span></p>
+                            </div>
+                            <div id="dbComplete" class="d-none">
+                                <p class="mb-3">Processing complete! Your results have been saved.</p>
+                                <a href="#" class="btn btn-primary" id="recordLink">
+                                    <i class="fas fa-link me-2"></i>View Permanent Record
+                                </a>
+                            </div>
+                            <div id="dbError" class="error-message d-none"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results View -->
+    <div id="resultsView" style="display: none;">
+        <div class="container mt-4">
+            <!-- Header Section -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="display-5 fw-bold text-primary mb-2">Image Processing Results</h2>
+                    <p class="lead text-muted">Your image has been processed successfully.</p>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a href="{{ url_for('main.upload_file') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Process Another Image
+                        </a>
+                        <a href="/record/{{ record_id }}" class="btn btn-primary">
+                            <i class="fas fa-eye me-2"></i>View Record
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card border-0 rounded-3 shadow-sm bg-light-blue h-100">
+                        <div class="card-body text-center p-3 p-md-4">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fas fa-object-group fa-2x text-primary me-2"></i>
+                                <h3 class="fw-bold mb-0" id="detectionsCount">0</h3>
+                            </div>
+                            <p class="mb-0 text-muted">Objects Detected</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card border-0 rounded-3 shadow-sm bg-light-green h-100">
+                        <div class="card-body text-center p-3 p-md-4">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fas fa-font fa-2x text-success me-2"></i>
+                                <h3 class="fw-bold mb-0" id="textCount">0</h3>
+                            </div>
+                            <p class="mb-0 text-muted">Text Elements Found</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 rounded-3 shadow-sm bg-light-orange h-100">
+                        <div class="card-body text-center p-3 p-md-4">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fas fa-shield-alt fa-2x text-warning me-2"></i>
+                                <h3 class="fw-bold mb-0" id="totalCount">0</h3>
+                            </div>
+                            <p class="mb-0 text-muted">Total Elements Processed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Comparison Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-lg border-0 rounded-3">
+                        <div class="card-header bg-gradient-primary text-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                            <h5 class="mb-2 mb-md-0 d-flex align-items-center">
+                                <i class="fas fa-images me-2"></i>Image Comparison
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <a id="downloadBtn" href="#" download="processed_image.jpg" class="btn btn-sm btn-light">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                                <button class="btn btn-sm btn-outline-light" onclick="toggleComparisonMode()">
+                                    <i class="fas fa-exchange-alt me-1"></i>Toggle View
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0 position-relative">
+                            <div class="comparison-container" id="comparisonContainer">
+                                <div class="comparison-item">
+                                    <div class="image-card">
+                                        <div class="image-card-header">Original Image</div>
+                                        <img src="{{ original_image }}" alt="Original Image" class="img-fluid w-100 cursor-zoom" onclick="openImageModal(this.src, 'Original Image')">
+                                    </div>
+                                </div>
+                                <div class="comparison-item">
+                                    <div class="image-card">
+                                        <div class="image-card-header">Processed Image</div>
+                                        <img id="resultProcessedImage" src="" alt="Processed Image" class="img-fluid w-100 cursor-zoom" onclick="openImageModal(this.src, 'Processed Image')">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Slider comparison view (hidden by default) -->
+                            <div class="slider-comparison" id="sliderComparison" style="display: none;">
+                                <div class="before-after-container">
+                                    <div class="before">
+                                        <img src="{{ original_image }}" alt="Original Image" onclick="openImageModal(this.src, 'Original Image')">
+                                        <div class="label">Original</div>
+                                    </div>
+                                    <div class="after">
+                                        <img id="sliderProcessedImage" src="" alt="Processed Image" onclick="openImageModal(this.src, 'Processed Image')">
+                                        <div class="label">Processed</div>
+                                    </div>
+                                    <input type="range" min="0" max="100" value="50" class="slider" id="comparisonSlider">
+                                    <div class="slider-button"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-lg rounded-3 h-100">
+                        <div class="card-header bg-primary text-white py-3 rounded-top-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="fas fa-search me-2"></i>Detected Objects
+                                <span class="badge bg-light text-primary ms-2" id="detectionsBadge">0</span>
+                            </h5>
+                            <button class="btn btn-sm btn-light" onclick="toggleExpansion('detections')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="card-body detection-results" id="detectionResults" style="max-height: 300px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="resultsDetectionsList">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-lg rounded-3 h-100">
+                        <div class="card-header bg-success text-white py-3 rounded-top-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="fas fa-font me-2"></i>Extracted Text
+                                <span class="badge bg-light text-success ms-2" id="textBadge">0</span>
+                            </h5>
+                            <button class="btn btn-sm btn-light" onclick="toggleExpansion('text')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="card-body text-results" id="textResultsSection" style="max-height: 300px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="resultsTextList">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cropped Objects Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg rounded-3">
+                        <div class="card-header bg-warning text-white py-3 rounded-top-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="fas fa-crop me-2"></i>Cropped Objects
+                                <span class="badge bg-light text-warning ms-2" id="croppedBadge">0</span>
+                            </h5>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="toggleGrid" checked>
+                                <label class="form-check-label text-white" for="toggleGrid">Grid View</label>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="croppedObjectsContainer">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4 pt-3 mb-5">
+                <a href="{{ url_for('main.upload_file') }}" class="btn btn-primary btn-lg px-5 py-3 me-3">
+                    <i class="fas fa-arrow-left me-2"></i>Process Another Image
+                </a>
+                <button class="btn btn-outline-secondary btn-lg px-5 py-3" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" alt="Modal Image" class="img-fluid" style="max-height: 70vh;">
+                </div>
+                <div class="modal-footer">
+                    <a id="modalDownload" href="#" download="image.jpg" class="btn btn-primary">
+                        <i class="fas fa-download me-1"></i>Download
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Alert -->
+    <div class="alert alert-success alert-dismissible fade processing-alert d-none" role="alert" id="processingAlert">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <div>
+                <strong>Processing Complete!</strong> All tasks have been finished successfully.
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        const recordId = "{{ record_id }}";
+        let progress = 0;
+        const totalSteps = 5; // YOLO, SR, OCR, Cropping, DB Save
+        let processingData = null;
+        let imageModal = null;
+        let pollingTimer = null;
+        let pollingInterval = 15000; // Start with 15 seconds
+        let processingStartTime = Date.now();
+        let errorCount = 0;
+        const MAX_ERROR_COUNT = 10; // Increased from 5 to allow for more connection attempts
+
+        // Initialize the application
+        function initApp() {
+            // Initialize the image modal
+            const modalElement = document.getElementById('imageModal');
+            imageModal = new bootstrap.Modal(modalElement);
+            
+            // Start checking processing status
+            updateProgress();
+            checkProcessingStatus();
+        }
+
+        // Function to update progress bar
+        function updateProgress(stepComplete = false) {
+            if (stepComplete) {
+                progress += (100 / totalSteps);
+            }
+            document.getElementById('overallProgress').style.width = `${Math.min(progress, 100)}%`;
+            
+            // Update progress text
+            const progressText = document.getElementById('progressText');
+            if (progress < 20) {
+                progressText.textContent = "Starting processing";
+            } else if (progress < 40) {
+                progressText.textContent = "Processing image";
+            } else if (progress < 60) {
+                progressText.textContent = "Halfway there";
+            } else if (progress < 80) {
+                progressText.textContent = "Almost done";
+            } else {
+                progressText.textContent = "Finalizing";
+            }
+        }
+
+        // Function to check processing status
+        async function checkProcessingStatus() {
+            // Clear any existing timer
+            if (pollingTimer) {
+                clearTimeout(pollingTimer);
+            }
+
+            try {
+                const response = await fetch(`/api/processing_status/${recordId}`);
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Reset error count on successful response
+                errorCount = 0;
+                
+                // Update each section as processing completes
+                if (data.sr_completed && document.getElementById('srLoading')) {
+                    completeSR(data.processed_image);
+                    updateProgress(true);
+                }
+                
+                if (data.yolo_completed && document.getElementById('detectionsLoading')) {
+                    completeYOLO(data.detections);
+                    updateProgress(true);
+                }
+                
+                if (data.ocr_completed && document.getElementById('textLoading')) {
+                    completeOCR(data.text_data);
+                    updateProgress(true);
+                }
+                
+                if (data.cropping_completed && document.getElementById('croppedLoading')) {
+                    completeCropping(data.cropped_objects);
+                    updateProgress(true);
+                }
+                
+                if (data.db_completed && document.getElementById('dbSaving')) {
+                    completeDB(data.record_url);
+                    updateProgress(true);
+                    // Store the data for the results view
+                    processingData = data;
+                    // Populate the results view
+                    populateResultsView(data);
+                    // Show results view and hide processing view
+                    document.getElementById('processingView').style.display = 'none';
+                    document.getElementById('resultsView').style.display = 'block';
+                }
+                
+                // If processing is fully complete, stop polling
+                if (data.status === 'completed') {
+                    completeAllProcessing();
+                } else {
+                    // Continue polling with the current interval
+                    pollingTimer = setTimeout(checkProcessingStatus, pollingInterval);
+                }
+            } catch (error) {
+                console.error('Error checking processing status:', error);
+                errorCount++;
+                
+                // If we've had too many errors, show a message
+                if (errorCount >= MAX_ERROR_COUNT) {
+                    handleExcessiveErrors();
+                    return;
+                }
+                
+                // Retry after longer delay on error
+                pollingTimer = setTimeout(checkProcessingStatus, 10000);
+            }
+        }
+
+        // Handle excessive errors
+        function handleExcessiveErrors() {
+            document.getElementById('progressText').textContent = 'Connection issues. Please refresh the page.';
+            document.getElementById('overallProgress').classList.remove('progress-bar-animated', 'progress-bar-striped', 'bg-primary');
+            document.getElementById('overallProgress').classList.add('bg-warning');
+            
+            // Show error in each section
+            showError('srError', 'Failed to connect to server');
+            showError('detectionsError', 'Failed to connect to server');
+            showError('textError', 'Failed to connect to server');
+            showError('croppedError', 'Failed to connect to server');
+            showError('dbError', 'Failed to connect to server');
+        }
+
+        // Show error message in a section
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.remove('d-none');
+                
+                // Also mark the card as failed
+                const card = element.closest('.card');
+                if (card) {
+                    card.classList.add('card-failed');
+                }
+            }
+        }
+
+        // Hide error message in a section
+        function hideError(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add('d-none');
+            }
+        }
+
+        // Functions to update each section when processing completes
+        function completeSR(imageUrl) {
+            const processedImage = document.getElementById('processedImage');
+            const srLoading = document.getElementById('srLoading');
+            const srError = document.getElementById('srError');
+            
+            // Hide any previous errors
+            hideError('srError');
+            
+            // Show loading until image is fully loaded
+            processedImage.onload = function() {
+                if (srLoading) {
+                    srLoading.classList.add('d-none');
+                }
+                processedImage.classList.remove('d-none');
+                document.getElementById('processedImageCard').classList.add('card-completed');
+            };
+            
+            processedImage.onerror = function() {
+                if (srLoading) {
+                    srLoading.classList.add('d-none');
+                }
+                showError('srError', '❌ Failed to load processed image');
+            };
+            
+            // Set src only if we have a valid URL
+            if (imageUrl && imageUrl.trim() !== '') {
+                processedImage.src = imageUrl;
+            } else {
+                if (srLoading) {
+                    srLoading.classList.add('d-none');
+                }
+                showError('srError', '❌ No processed image available');
+            }
+        }
+
+        function completeYOLO(detections) {
+            // Hide any previous errors
+            hideError('detectionsError');
+            
+            if (document.getElementById('detectionsLoading')) {
+                document.getElementById('detectionsLoading').classList.add('d-none');
+            }
+            const detectionsList = document.getElementById('detectionsList');
+            detectionsList.innerHTML = '';
+            
+            if (detections && detections.length > 0) {
+                // Count objects by type
+                const objectCounts = {};
+                detections.forEach(detection => {
+                    const label = detection.label;
+                    objectCounts[label] = (objectCounts[label] || 0) + 1;
+                });
+                
+                // Create summary list
+                for (const [label, count] of Object.entries(objectCounts)) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    listItem.innerHTML = `
+                        ${label}
+                        <span class="badge bg-primary rounded-pill">${count}</span>
+                    `;
+                    detectionsList.appendChild(listItem);
+                }
+            } else {
+                detectionsList.innerHTML = '<li class="list-group-item text-muted">No objects detected</li>';
+            }
+            
+            document.getElementById('detectionsResults').classList.remove('d-none');
+            document.getElementById('detectionsCard').classList.add('card-completed');
+        }
+
+        function completeOCR(textData) {
+            // Hide any previous errors
+            hideError('textError');
+            
+            if (document.getElementById('textLoading')) {
+                document.getElementById('textLoading').classList.add('d-none');
+            }
+            const textList = document.getElementById('textList');
+            textList.innerHTML = '';
+            
+            if (textData && textData.length > 0) {
+                textData.forEach((textItem, index) => {
+                    const textElement = document.createElement('div');
+                    textElement.className = 'list-group-item';
+                    textElement.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Text Snippet #${index + 1}</h6>
+                            <small>${(textItem.confidence * 100).toFixed(1)}% confidence</small>
+                        </div>
+                        <p class="mb-1">${textItem.text}</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2 copy-text" data-text="${textItem.text}">
+                            <i class="fas fa-copy me-1"></i>Copy
+                        </button>
+                    `;
+                    textList.appendChild(textElement);
+                });
+                
+                // Add copy functionality
+                document.querySelectorAll('.copy-text').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const text = this.getAttribute('data-text');
+                        navigator.clipboard.writeText(text).then(() => {
+                            const originalText = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                            setTimeout(() => {
+                                this.innerHTML = originalText;
+                            }, 2000);
+                        });
+                    });
+                });
+            } else {
+                textList.innerHTML = '<div class="list-group-item text-muted">No text extracted</div>';
+            }
+            
+            document.getElementById('textResults').classList.remove('d-none');
+            document.getElementById('textCard').classList.add('card-completed');
+        }
+
+        function completeCropping(croppedObjects) {
+            // Hide any previous errors
+            hideError('croppedError');
+            
+            if (document.getElementById('croppedLoading')) {
+                document.getElementById('croppedLoading').classList.add('d-none');
+            }
+            const croppedGrid = document.getElementById('croppedGrid');
+            croppedGrid.innerHTML = '';
+            
+            if (croppedObjects && croppedObjects.length > 0) {
+                croppedObjects.forEach((obj, index) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-6 col-md-3 col-lg-2';
+                    col.innerHTML = `
+                        <div class="card">
+                            <img src="${obj.url}" class="card-img-top" alt="Cropped object ${index + 1}" onerror="this.src='https://via.placeholder.com/150x150?text=Image+Error'">
+                            <div class="card-body p-2 text-center">
+                                <small class="text-muted">Object ${index + 1}</small>
+                                <a href="${obj.url}" download="object_${index + 1}.jpg" class="btn btn-sm btn-outline-primary d-block mt-1">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    croppedGrid.appendChild(col);
+                });
+            } else {
+                croppedGrid.innerHTML = '<p class="text-muted">No objects extracted</p>';
+            }
+            
+            document.getElementById('croppedResults').classList.remove('d-none');
+            document.getElementById('croppedObjectsCard').classList.add('card-completed');
+        }
+
+        function completeDB(recordUrl) {
+            // Hide any previous errors
+            hideError('dbError');
+            
+            if (document.getElementById('dbSaving')) {
+                document.getElementById('dbSaving').classList.add('d-none');
+            }
+            document.getElementById('dbComplete').classList.remove('d-none');
+            if (recordUrl) {
+                document.getElementById('recordLink').href = recordUrl;
+            }
+        }
+
+        function completeAllProcessing() {
+            document.getElementById('overallProgress').style.width = '100%';
+            document.getElementById('progressText').textContent = 'Processing complete!';
+            document.getElementById('overallProgress').classList.remove('progress-bar-animated');
+            document.getElementById('overallProgress').classList.remove('progress-bar-striped');
+            document.getElementById('overallProgress').classList.add('bg-success');
+            
+            // Show success alert
+            const alert = document.getElementById('processingAlert');
+            alert.classList.remove('alert-success', 'd-none');
+            alert.classList.add('alert-success');
+            alert.querySelector('strong').textContent = 'Processing Complete!';
+            alert.querySelector('.spinner-border').classList.add('d-none');
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        }
+
+        // Populate the results view with data
+        function populateResultsView(data) {
+            // Set processed image
+            if (data.processed_image) {
+                document.getElementById('resultProcessedImage').src = data.processed_image;
+                document.getElementById('sliderProcessedImage').src = data.processed_image;
+                document.getElementById('downloadBtn').href = data.processed_image;
+            }
+            
+            // Set detection counts
+            const detectionsCount = data.detections ? data.detections.length : 0;
+            document.getElementById('detectionsCount').textContent = detectionsCount;
+            document.getElementById('detectionsBadge').textContent = detectionsCount;
+            
+            // Set text counts
+            const textCount = data.text_data ? data.text_data.length : 0;
+            document.getElementById('textCount').textContent = textCount;
+            document.getElementById('textBadge').textContent = textCount;
+            
+            // Set total count
+            document.getElementById('totalCount').textContent = detectionsCount + textCount;
+            
+            // Set cropped objects count
+            const croppedCount = data.cropped_objects ? data.cropped_objects.length : 0;
+            document.getElementById('croppedBadge').textContent = croppedCount;
+            
+            // Populate detections list
+            const detectionsList = document.getElementById('resultsDetectionsList');
+            detectionsList.innerHTML = '';
+            
+            if (data.detections && data.detections.length > 0) {
+                // Count objects by type
+                const objectCounts = {};
+                data.detections.forEach(detection => {
+                    const label = detection.label;
+                    objectCounts[label] = (objectCounts[label] || 0) + 1;
+                });
+                
+                // Create summary list
+                for (const [label, count] of Object.entries(objectCounts)) {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center py-3';
+                    listItem.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="detection-color-indicator me-3" style="background-color: hsl(${Math.random() * 360}, 70%, 60%)"></div>
+                            <div>
+                                <span class="fw-bold text-primary">${label}</span>
+                                <div class="progress mt-2" style="height: 8px; width: 160px;">
+                                    <div class="progress-bar" role="progressbar" 
+                                        style="width: ${Math.random() * 100}%; background-color: hsl(${Math.random() * 360}, 70%, 60%)" 
+                                        aria-valuenow="${Math.random() * 100}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${count}</span>
+                    `;
+                    detectionsList.appendChild(listItem);
+                }
+            } else {
+                detectionsList.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No objects detected</p>
+                    </div>
+                `;
+            }
+            
+            // Populate text list
+            const textList = document.getElementById('resultsTextList');
+            textList.innerHTML = '';
+            
+            if (data.text_data && data.text_data.length > 0) {
+                data.text_data.forEach((textItem, index) => {
+                    const textElement = document.createElement('div');
+                    textElement.className = 'list-group-item py-3';
+                    textElement.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-success">Text Snippet #${index + 1}</span>
+                            <span class="badge bg-success rounded-pill">${(textItem.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                        <p class="mb-0 p-3 bg-light rounded-2 border text-snippet">"${textItem.text}"</p>
+                        <button class="btn btn-sm btn-outline-success mt-2 copy-text" data-text="${textItem.text}">
+                            <i class="fas fa-copy me-1"></i>Copy Text
+                        </button>
+                    `;
+                    textList.appendChild(textElement);
+                });
+                
+                // Add copy functionality
+                document.querySelectorAll('.copy-text').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const text = this.getAttribute('data-text');
+                        navigator.clipboard.writeText(text).then(() => {
+                            const originalHtml = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                            setTimeout(() => {
+                                this.innerHTML = originalHtml;
+                            }, 2000);
+                        });
+                    });
+                });
+            } else {
+                textList.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-font fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No text extracted</p>
+                    </div>
+                `;
+            }
+            
+            // Populate cropped objects
+            const croppedContainer = document.getElementById('croppedObjectsContainer');
+            croppedContainer.innerHTML = '';
+            
+            if (data.cropped_objects && data.cropped_objects.length > 0) {
+                // Grid view
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'row g-3';
+                gridDiv.id = 'croppedGrid';
+                
+                data.cropped_objects.forEach((obj, index) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-6 col-md-4 col-lg-3';
+                    col.innerHTML = `
+                        <div class="cropped-object-card border rounded-3 overflow-hidden shadow-sm h-100">
+                            <img src="${obj.url}" class="img-fluid w-100 object-fit-cover cursor-zoom" alt="Cropped Object ${index + 1}" style="height: 180px;" onerror="this.src='https://via.placeholder.com/150x150?text=Image+Error'" onclick="openImageModal(this.src, 'Cropped Object #${index + 1}')">
+                            <div class="p-2 text-center">
+                                <small class="text-muted">Object #${index + 1}</small>
+                                <a href="${obj.url}" download="cropped_object_${index + 1}.jpg" class="btn btn-sm btn-outline-primary d-block mt-1">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    gridDiv.appendChild(col);
+                });
+                
+                croppedContainer.appendChild(gridDiv);
+            } else {
+                croppedContainer.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-crop fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No objects cropped</p>
+                    </div>
+                `;
+            }
+            
+            // Initialize the image comparison slider
+            initComparisonSlider();
+        }
+
+        // Toggle between side-by-side and slider comparison
+        function toggleComparisonMode() {
+            const comparisonContainer = document.getElementById('comparisonContainer');
+            const sliderComparison = document.getElementById('sliderComparison');
+            
+            if (comparisonContainer.style.display === 'none') {
+                comparisonContainer.style.display = 'flex';
+                sliderComparison.style.display = 'none';
+            } else {
+                comparisonContainer.style.display = 'none';
+                sliderComparison.style.display = 'block';
+            }
+        }
+        
+        // Initialize the image comparison slider
+        function initComparisonSlider() {
+            const slider = document.getElementById('comparisonSlider');
+            const after = document.querySelector('.after');
+            
+            if (slider && after) {
+                slider.addEventListener('input', function() {
+                    after.style.width = this.value + '%';
+                });
+            }
+        }
+        
+        // Toggle expansion of results sections
+        function toggleExpansion(section) {
+            const element = section === 'detections' 
+                ? document.getElementById('detectionResults') 
+                : document.getElementById('textResultsSection');
+                
+            if (element.style.maxHeight === 'none') {
+                element.style.maxHeight = '300px';
+                element.style.overflowY = 'auto';
+            } else {
+                element.style.maxHeight = 'none';
+                element.style.overflowY = 'visible';
+            }
+        }
+        
+        // Open image in modal
+        function openImageModal(src, title) {
+            if (!src) return;
+            
+            document.getElementById('modalImage').src = src;
+            document.getElementById('modalDownload').href = src;
+            document.getElementById('modalDownload').download = title.toLowerCase().replace(/\s+/g, '_') + '.jpg';
+            document.getElementById('imageModalLabel').textContent = title;
+            
+            if (imageModal) {
+                imageModal.show();
+            }
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

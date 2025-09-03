@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-gradient-primary text-white py-4 rounded-top-3 text-center">
+                    <h2 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Image</h2>
+                    <p class="mb-0 mt-2">Process your images with AI-powered enhancement</p>
+                </div>
+                <div class="card-body p-5">
+                    <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="mb-4 text-center">
+                            <div class="file-upload-area border-2 border-dashed rounded-3 p-5" id="dropZone">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="mb-2">Drag & Drop your image here</h5>
+                                <p class="text-muted mb-3">or</p>
+                                <div class="btn btn-primary btn-lg">
+                                    <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    <input type="file" name="file" id="fileInput" accept="image/*" class="d-none">
+                                </div>
+                                <p class="small text-muted mt-3">Supported formats: JPG, JPEG, PNG, WEBP</p>
+                            </div>
+                            <div class="selected-file mt-3 d-none" id="selectedFile">
+                                <div class="d-flex align-items-center justify-content-between bg-light rounded-3 p-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file-image text-primary me-3"></i>
+                                        <div>
+                                            <h6 class="mb-0" id="fileName">filename.jpg</h6>
+                                            <small class="text-muted" id="fileSize">0 KB</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="mb-3">Processing Options</h5>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="blurSensitive" name="blur_sensitive" checked>
+                                <label class="form-check-label" for="blurSensitive">Blur sensitive content (faces, people)</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="enhanceQuality" name="enhance_quality" checked>
+                                <label class="form-check-label" for="enhanceQuality">Enhance image quality</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="extractObjects" name="extract_objects" checked>
+                                <label class="form-check-label" for="extractObjects">Extract detected objects</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="extractText" name="extract_text" checked>
+                                <label class="form-check-label" for="extractText">Extract text from image</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3" id="submitButton" disabled>
+                            <i class="fas fa-spinner fa-spin d-none me-2" id="loadingSpinner"></i>
+                            <span id="buttonText">Process Image</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted">By uploading an image, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #4e73df, #224abe);
+    }
+    
+    .border-dashed {
+        border-style: dashed !important;
+    }
+    
+    .file-upload-area {
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+    
+    .file-upload-area:hover, .file-upload-area.dragover {
+        background-color: #e9ecef;
+        border-color: #4e73df !important;
+    }
+    
+    #fileInput {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFile = document.getElementById('selectedFile');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        const submitButton = document.getElementById('submitButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const buttonText = document.getElementById('buttonText');
+        const uploadForm = document.getElementById('uploadForm');
+        
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropZone.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            dropZone.classList.remove('dragover');
+        }
+        
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                fileInput.files = files;
+                handleFiles(files);
+            }
+        }
+        
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                
+                // Check if file is an image
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                
+                // Check file size (max 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size exceeds 10MB limit');
+                    return;
+                }
+                
+                // Display file info
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                selectedFile.classList.remove('d-none');
+                
+                // Enable submit button
+                submitButton.disabled = false;
+            }
+        }
+        
+        removeFile.addEventListener('click', function() {
+            fileInput.value = '';
+            selectedFile.classList.add('d-none');
+            submitButton.disabled = true;
+        });
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        uploadForm.addEventListener('submit', function() {
+            // Show loading state
+            loadingSpinner.classList.remove('d-none');
+            buttonText.textContent = 'Processing...';
+            submitButton.disabled = true;
+        });
+        
+        // Click on drop zone to trigger file input
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+    });
+</script>
+{% endblock %}

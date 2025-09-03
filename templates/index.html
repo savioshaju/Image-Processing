@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <h1>Image Sanitization for OCSEA</h1>
+    <p>Protect privacy while enabling crowdsourced investigation</p>
+    <a href="{{ url_for('main.upload_file') }}" class="cta-button">Process an Image</a>
+</div>
+
+<div class="features">
+    <div class="feature">
+        <h3>AI-Powered Detection</h3>
+        <p>Uses YOLO to detect and blur sensitive information</p>
+    </div>
+    <div class="feature">
+        <h3>Text Extraction</h3>
+        <p>Extracts text from images for analysis</p>
+    </div>
+    <div class="feature">
+        <h3>Irreversible Blurring</h3>
+        <p>Applies multiple blur passes to ensure privacy</p>
+    </div>
+    <div class="feature">
+        <h3>Image Enhancement</h3>
+        <p>Improves image quality for better analysis</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="about-container">
+    <div class="hero-section">
+        <h1>About Our Application</h1>
+        <p class="subtitle">Advanced Image Processing for Law Enforcement and Investigation</p>
+    </div>
+
+    <div class="about-content">
+        <section class="mission-section">
+            <h2>Our Mission</h2>
+            <p>This application was developed for the Hac'KP Hackathon to help law enforcement agencies share non-identifiable visual clues from sensitive investigations while protecting privacy and maintaining investigative integrity.</p>
+        </section>
+
+        <section class="features-section">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Object Detection</h3>
+                    <p>Advanced YOLOv8-based object detection to identify and categorize elements within images with high precision.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3>Privacy Protection</h3>
+                    <p>Automatic detection and irreversible blurring of human subjects to protect identities while preserving contextual information.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Text Extraction</h3>
+                    <p>OCR technology to extract text content from images, helping investigators identify relevant written information.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <h3>Image Enhancement</h3>
+                    <p>Super-resolution and quality enhancement algorithms to improve image clarity and detail for better analysis.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✂️</div>
+                    <h3>Object Cropping</h3>
+                    <p>Isolate and extract specific objects from images while excluding sensitive human elements.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure Processing</h3>
+                    <p>All processing happens locally with no external data transmission, ensuring complete confidentiality.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="technology-section">
+            <h2>Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h3>Computer Vision</h3>
+                    <ul>
+                        <li>YOLOv8 for object detection</li>
+                        <li>OpenCV for image processing</li>
+                        <li>EDSR super-resolution models</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>Text Processing</h3>
+                    <ul>
+                        <li>EasyOCR for text extraction</li>
+                        <li>Multi-language support</li>
+                        <li>Confidence-based filtering</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>Web Framework</h3>
+                    <ul>
+                        <li>Flask backend</li>
+                        <li>HTML5/CSS3/JavaScript frontend</li>
+                        <li>Responsive design</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>Deployment</h3>
+                    <ul>
+                        <li>Cross-platform compatibility</li>
+                        <li>Local processing architecture</li>
+                        <li>No external dependencies</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="workflow-section">
+            <h2>How It Works</h2>
+            <div class="workflow-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Upload</h3>
+                        <p>Users upload images through a secure web interface</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Process</h3>
+                        <p>The system automatically detects objects, text, and human elements</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Protect</h3>
+                        <p>Human identities are irreversibly blurred using multiple techniques</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Enhance</h3>
+                        <p>Image quality is improved through super-resolution algorithms</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Extract</h3>
+                        <p>Objects and text are extracted for further analysis</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h3>Deliver</h3>
+                        <p>Processed images and extracted data are presented to the user</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="use-cases-section">
+            <h2>Use Cases</h2>
+            <div class="use-cases-grid">
+                <div class="use-case">
+                    <h3>Law Enforcement</h3>
+                    <p>Share evidence images with other agencies while protecting witness and victim identities</p>
+                </div>
+                <div class="use-case">
+                    <h3>Journalism</h3>
+                    <p>Publish images from sensitive locations while protecting the privacy of individuals</p>
+                </div>
+                <div class="use-case">
+                    <h3>Research</h3>
+                    <p>Analyze public spaces and environments while maintaining ethical standards of privacy</p>
+                </div>
+                <div class="use-case">
+                    <h3>Legal Proceedings</h3>
+                    <p>Prepare visual evidence for court presentations with appropriate privacy protections</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="privacy-section">
+            <h2>Privacy & Ethics</h2>
+            <p>Our application is designed with privacy and ethical considerations at its core:</p>
+            <ul>
+                <li>All processing occurs locally on the user's device with no external data transmission</li>
+                <li>Human detection uses a conservative approach to ensure no identities are accidentally revealed</li>
+                <li>Blurring techniques are irreversible to prevent de-anonymization attempts</li>
+                <li>No personal data is stored or logged during the processing workflow</li>
+                <li>The system is designed to comply with privacy regulations like GDPR and CCPA</li>
+            </ul>
+        </section>
+
+        <section class="team-section">
+            <h2>Development Team</h2>
+            <p>This application was developed by a dedicated team for the Hac'KP Hackathon, bringing together expertise in computer vision, web development, and security to create a tool that serves both investigative needs and privacy protection.</p>
+        </section>
+
+        <section class="contact-section">
+            <h2>Get In Touch</h2>
+            <p>For questions, suggestions, or support regarding this application, please contact our team through the hackathon platform or via the provided communication channels.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.about-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 40px 0;
+    background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.hero-section h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.about-content section {
+    margin-bottom: 50px;
+}
+
+.about-content h2 {
+    color: #4a4a4a;
+    border-bottom: 2px solid #6e8efb;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.feature-card {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.tech-category {
+    background: #f0f4ff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.tech-category h3 {
+    color: #6e8efb;
+    margin-bottom: 15px;
+}
+
+.tech-category ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.tech-category li {
+    padding: 5px 0;
+    position: relative;
+    padding-left: 20px;
+}
+
+.tech-category li:before {
+    content: "•";
+    color: #a777e3;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.workflow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.step {
+    flex: 0 0 calc(33.333% - 20px);
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.step-number {
+    background: #6e8efb;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.use-cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.use-case {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #a777e3;
+}
+
+.privacy-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.privacy-section li {
+    padding: 10px 0;
+    position: relative;
+    padding-left: 30px;
+}
+
+.privacy-section li:before {
+    content: "✓";
+    color: #4caf50;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.team-section, .contact-section {
+    background: #f0f4ff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .step {
+        flex: 0 0 100%;
+    }
+    
+    .features-grid, .tech-grid, .use-cases-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
