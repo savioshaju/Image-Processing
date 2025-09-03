@@ -51,3 +51,5 @@ logs/
 uploads/
 project_structure.txt
 "@ | Out-File -Encoding utf8 .gitignore
+BasicSR/
+Real-ESRGAN/
