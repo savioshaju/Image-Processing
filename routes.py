@@ -467,3 +467,90 @@ def view_record(record_id):
 
     # Simply pass the record object to the template
     return render_template('record_detail.html', record=record)
+
+# Add this route to your blueprint
+@main_bp.route('/find_similar', methods=['POST'])
+def find_similar():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        image_url = data.get('image_url')
+        label = data.get('label')
+        confidence = data.get('confidence')
+        
+        if not image_url:
+            return jsonify({'error': 'No image URL provided'}), 400
+            
+        # Find the record that contains this cropped object
+        source_record = None
+        all_records = ImageRecord.get_all(limit=None)  # Get all records
+        
+        for record in all_records:
+            # Check if this record contains the query image
+            if record.processed_url == image_url:
+                source_record = record
+                break
+                
+            # Check cropped objects
+            for cropped_obj in record.cropped_objects_urls:
+                if cropped_obj['url'] == image_url:
+                    source_record = record
+                    break
+                    
+            if source_record:
+                break
+                
+        if not source_record:
+            return jsonify({'error': 'Source image not found in records'}), 404
+            
+        # Find similar objects based on label and confidence
+        similar_objects = []
+        
+        # If we have a label, find objects with the same label
+        if label:
+            for record in all_records:
+                # Check the processed image if it matches the label
+                # (This would require storing labels for the processed image, which you might not have)
+                
+                # Check cropped objects
+                for cropped_obj in record.cropped_objects_urls:
+                    if (cropped_obj.get('label') == label and 
+                        cropped_obj['url'] != image_url):  # Don't include the original
+                        similar_objects.append({
+                            'url': cropped_obj['url'],
+                            'label': cropped_obj.get('label', 'Object'),
+                            'confidence': cropped_obj.get('confidence', 0),
+                            'record_id': record.id
+                        })
+        
+        # If we don't have enough similar objects by label, include other objects from the same record
+        if len(similar_objects) < 3:
+            for cropped_obj in source_record.cropped_objects_urls:
+                if cropped_obj['url'] != image_url:  # Don't include the original
+                    # Check if we already have this object
+                    if not any(obj['url'] == cropped_obj['url'] for obj in similar_objects):
+                        similar_objects.append({
+                            'url': cropped_obj['url'],
+                            'label': cropped_obj.get('label', 'Object'),
+                            'confidence': cropped_obj.get('confidence', 0),
+                            'record_id': source_record.id
+                        })
+        
+        # Limit to top 5 similar objects
+        similar_objects = similar_objects[:5]
+        
+        # Prepare response
+        response = {
+            'original_url': image_url,
+            'label': label,
+            'processed_image_url': source_record.processed_url,
+            'similar_objects': similar_objects
+        }
+        
+        return jsonify(response), 200
+        
+    except Exception as e:
+        current_app.logger.exception(f"Error in find_similar: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
