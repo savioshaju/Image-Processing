@@ -216,6 +216,8 @@ def upload_file():
             flash("Error uploading original image")
             return redirect(request.url)
 
+
+
         # Create DB record in 'processing'
         record = ImageRecord(
             original_url=original_url,
