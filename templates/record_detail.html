@@ -49,6 +49,12 @@
                                 <a href="{{ cropped_obj.url }}" download class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-download"></i> Download
                                 </a>
+                                <!-- Find Similar Button -->
+                                <button class="btn btn-sm btn-outline-info find-similar mt-1" 
+                                        data-url="{{ cropped_obj.url }}"
+                                        data-label="{{ cropped_obj.label }}">
+                                    <i class="fas fa-search"></i> Find Similar
+                                </button>
                             </div>
                         </div>
                         {% endfor %}
@@ -154,6 +160,31 @@
     </div>
 </div>
 
+<!-- Similar Images Modal -->
+<div class="modal fade" id="similarImagesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Similar Objects</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="spinner-border text-primary" role="status" id="similarLoadingSpinner">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div id="similarImagesContainer" class="row">
+                    <!-- Images will be inserted here dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .enlargeable {
     cursor: zoom-in;
@@ -163,6 +194,23 @@
 .enlargeable:hover {
     transform: scale(1.01);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.similar-img-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.similar-img-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px;
+    font-size: 0.9rem;
+    text-align: center;
 }
 </style>
 
@@ -196,6 +244,119 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape' && document.getElementById('imageModal').classList.contains('show')) {
             modal.hide();
         }
+    });
+    
+    // Find Similar functionality
+    const similarButtons = document.querySelectorAll('.find-similar');
+    const similarModal = new bootstrap.Modal(document.getElementById('similarImagesModal'));
+    const similarContainer = document.getElementById('similarImagesContainer');
+    const loadingSpinner = document.getElementById('similarLoadingSpinner');
+    
+    similarButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const imageUrl = this.getAttribute('data-url');
+            const label = this.getAttribute('data-label');
+            
+            // Show loading state
+            loadingSpinner.style.display = 'block';
+            similarContainer.innerHTML = '';
+            similarModal.show();
+            
+            // Send AJAX request
+            fetch('/find_similar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image_url: imageUrl, label: label })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                
+                // Clear previous results
+                similarContainer.innerHTML = '';
+                
+                // Check if we have results
+                if (data.similar_images && data.similar_images.length > 0) {
+                    // Create a row for the original image
+                    const originalRow = document.createElement('div');
+                    originalRow.className = 'row mb-4';
+                    originalRow.innerHTML = '<h5>Original Object</h5>';
+                    similarContainer.appendChild(originalRow);
+                    
+                    // Add the original image
+                    const originalCol = document.createElement('div');
+                    originalCol.className = 'col-md-4 similar-img-container';
+                    originalCol.innerHTML = `
+                        <img src="${data.original_url}" class="img-thumbnail" alt="Original object">
+                        <div class="similar-img-label">${data.label || 'Original'}</div>
+                    `;
+                    similarContainer.appendChild(originalCol);
+                    
+                    // Create a row for similar images
+                    const similarRow = document.createElement('div');
+                    similarRow.className = 'row mt-4';
+                    similarRow.innerHTML = '<h5>Similar Objects</h5>';
+                    similarContainer.appendChild(similarRow);
+                    
+                    // Add similar images
+                    data.similar_images.forEach(img => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3 mb-3 similar-img-container';
+                        col.innerHTML = `
+                            <img src="${img.url}" class="img-thumbnail enlargeable" alt="Similar object" data-url="${img.url}">
+                            <div class="similar-img-label">${img.label || 'Object'} (${(img.confidence * 100).toFixed(2)}%)</div>
+                            <div class="mt-2">
+                                <a href="${img.url}" download class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        `;
+                        similarContainer.appendChild(col);
+                    });
+                    
+                    // If we have the processed image, add it
+                    if (data.processed_image_url) {
+                        const processedRow = document.createElement('div');
+                        processedRow.className = 'row mt-4';
+                        processedRow.innerHTML = '<h5>Processed Image Containing Object</h5>';
+                        similarContainer.appendChild(processedRow);
+                        
+                        const processedCol = document.createElement('div');
+                        processedCol.className = 'col-md-6 similar-img-container';
+                        processedCol.innerHTML = `
+                            <img src="${data.processed_image_url}" class="img-thumbnail enlargeable" alt="Processed image" data-url="${data.processed_image_url}">
+                            <div class="mt-2">
+                                <a href="${data.processed_image_url}" download class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        `;
+                        similarContainer.appendChild(processedCol);
+                    }
+                } else {
+                    similarContainer.innerHTML = '<p class="text-center">No similar objects found.</p>';
+                }
+                
+                // Re-attach event listeners to the new enlargeable images
+                document.querySelectorAll('#similarImagesContainer .enlargeable').forEach(img => {
+                    img.addEventListener('click', function() {
+                        const imageUrl = this.getAttribute('data-url') || this.src;
+                        modalImage.src = imageUrl;
+                        modalDownload.href = imageUrl;
+                        similarModal.hide();
+                        modal.show();
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingSpinner.style.display = 'none';
+                similarContainer.innerHTML = '<p class="text-center text-danger">Error loading similar images.</p>';
+            });
+        });
     });
 });
 </script>
