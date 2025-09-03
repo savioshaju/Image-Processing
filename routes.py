@@ -554,3 +554,5 @@ def find_similar():
     except Exception as e:
         current_app.logger.exception(f"Error in find_similar: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+    
+    
